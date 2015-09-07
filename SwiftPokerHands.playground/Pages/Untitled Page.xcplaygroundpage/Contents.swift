@@ -1,6 +1,6 @@
 //: Playground - noun: a place where people can play
 
-import UIKit
+import Foundation
 
 enum Suit: Int {
     case Spades, Hearts, Clubs, Diamonds
@@ -16,7 +16,7 @@ struct PokerCard {
     let suit: Suit
 }
 
-enum PokerHandRank: Int {
+enum PokerHandRank: Int, Comparable {
     case HighCard = 1
     case OnePair
     case TwoPair
@@ -29,7 +29,7 @@ enum PokerHandRank: Int {
     case RoyalFlush
 }
 
-struct PokerHand: Comparable {
+struct PokerHand {
     let ranks: [Rank: Int]
     let suits: [Suit: Int]
     
@@ -51,7 +51,7 @@ struct PokerHand: Comparable {
         let tripleRanks = ranks.values.lazy.filter { $0 == 3 }
         let doubleRanks = ranks.values.lazy.filter { $0 == 2 }
 
-        if isRoyalFlush() {
+        if suits.keys.count == 1 && ranks.keys.lazy.filter({[.Ten,.Jack,.Queen,.King,.Ace].contains($0)}).count == 5 {
             return .RoyalFlush
         }
         if isStraight() && isFlush() {
@@ -81,14 +81,6 @@ struct PokerHand: Comparable {
         return .HighCard
     }
     
-    func isRoyalFlush() -> Bool {
-        let validCards: [Rank] = [.Ten, .Jack, .Queen, .King, .Ace]
-        if suits.keys.count == 1 && ranks.keys.lazy.filter({validCards.contains($0)}).count == 5 {
-            return true
-        }
-        return false
-    }
-    
     func isFlush() -> Bool {
         return suits.keys.count == 1
     }
@@ -97,18 +89,12 @@ struct PokerHand: Comparable {
         guard ranks.keys.count == 5 else {
             return false
         }
-        let sortedRanks = ranks.keys.map({$0.rawValue}).sort()
-        var lastRank = sortedRanks[0]
-        for i in 1..<5 {
-            if sortedRanks[i] - lastRank != 1 {
-                return false
-            }
-            lastRank = sortedRanks[i]
-        }
-        return true
+        let sortedRanks = ranks.keys.map({$0.rawValue}).sort(>)
+        return sortedRanks[0] - sortedRanks[4] == 4
     }
     
-    func orderedArray() -> [Rank] {
+    
+    func histogram() -> ([Int], [Rank]) {
         // Group by number of cards
         var sortedWithinRanks = [Int: [Rank]]()
         for (rank, value) in ranks {
@@ -128,30 +114,18 @@ struct PokerHand: Comparable {
         
         // Generate final sorted array
         var result = [Rank]()
-        for (value, rankArray) in sortedWithinRanks {
-            for rank in rankArray {
-                let currentRanks = [Rank](count: value, repeatedValue: rank)
+        var histogram = [Int]()
+        for key in sortedWithinRanks.keys.sort(>) {
+            for rank in sortedWithinRanks[key]!.sort(>) {
+                histogram.append(key)
+                let currentRanks = [Rank](count: key, repeatedValue: rank)
                 result += currentRanks
             }
         }
         
-        return result
+        // histogram
+        return (histogram, result)
     }
-}
-
-// Compare hand ranks first, then if they are the same, compare card by card.
-func ==(x: PokerHand, y: PokerHand) -> Bool {
-    if x.handRank() != y.handRank() {
-        return false
-    }
-    let sortedXRanks = x.orderedArray()
-    let sortedYRanks = y.orderedArray()
-    for i in 0..<5 {
-        if sortedXRanks[i] != sortedYRanks[i] {
-            return false
-        }
-    }
-    return true
 }
 
 // Compare hand rands first, then if they are the same, compare card by card.
@@ -161,13 +135,33 @@ func <(x: PokerHand, y: PokerHand) -> Bool {
     } else if x.handRank() != y.handRank() {
         return false
     }
-    let sortedXRanks = x.orderedArray()
-    let sortedYRanks = y.orderedArray()
-    for i in 0..<5 {
-        if sortedXRanks[i] < sortedYRanks[i] {
-            return true
+    
+    let handRank = x.handRank()
+    
+    // handle straights, compare top card
+    if handRank == .StraightFlush || handRank == .Straight {
+        return x.ranks.keys.sort(<).last! < y.ranks.keys.sort(<).last!
+    }
+    
+    // handle flushes
+    // iterate down through a reverse sort of the ranks until you find a higher card or run out
+    if handRank == .RoyalFlush || handRank == .Flush {
+        let reverseXSort = x.ranks.keys.sort(>)
+        let reverseYSort = y.ranks.keys.sort(>)
+        for (x, y) in zip(reverseXSort, reverseYSort) {
+            if x < y { return true }
+            if x > y { return false }
         }
     }
+    
+    // For the histogram-based hands, you start at the beginning of the reverse-sorted count list and compare the ranks (two pair is tricky - you must always evaluate the higher of the two pairs for each hand first - the histogram won't help, then the lower pair, then the kicker).
+    let xHistogram = x.histogram()
+    let yHistogram = y.histogram()
+    for (x, y) in zip(xHistogram.1, yHistogram.1) {
+        if x < y { return true }
+        if x > y { return false }
+    }
+    
     return false
 }
 
@@ -179,21 +173,26 @@ func <(x: Rank, y: Rank) -> Bool {
     return x.rawValue < y.rawValue
 }
 
+func >(x: Rank, y: Rank) -> Bool {
+    return x.rawValue > y.rawValue
+}
+
+
 //===============================================
 
 let cards = [
     PokerCard(rank: .Four, suit: .Hearts),
     PokerCard(rank: .Four, suit: .Diamonds),
-    PokerCard(rank: .Ten, suit: .Clubs),
-    PokerCard(rank: .Ten, suit: .Spades),
-    PokerCard(rank: .Jack, suit: .Hearts),
+    PokerCard(rank: .Five, suit: .Hearts),
+    PokerCard(rank: .Five, suit: .Hearts),
+    PokerCard(rank: .Six, suit: .Hearts),
 ]
 let cards2 = [
-    PokerCard(rank: .Four, suit: .Hearts),
-    PokerCard(rank: .Four, suit: .Diamonds),
-    PokerCard(rank: .Ten, suit: .Clubs),
-    PokerCard(rank: .Ten, suit: .Spades),
-    PokerCard(rank: .Ace, suit: .Hearts),
+    PokerCard(rank: .Five, suit: .Hearts),
+    PokerCard(rank: .Five, suit: .Hearts),
+    PokerCard(rank: .Seven, suit: .Hearts),
+    PokerCard(rank: .Six, suit: .Hearts),
+    PokerCard(rank: .Six, suit: .Clubs),
 ]
 let cards3 = [
     PokerCard(rank: .Four, suit: .Hearts),
@@ -211,10 +210,56 @@ print(hand2.handRank())
 
 print(hand.suits)
 print(hand.handRank())
-print(hand.orderedArray())
-
 print(hand3.handRank())
 
+func cardFromString(string: String) -> PokerCard {
+    let rankString = string.substringWithRange(Range<String.Index>(start: string.startIndex, end: string.startIndex.advancedBy(1)))
+    let suitString = string.substringWithRange(Range<String.Index>(start: string.startIndex.advancedBy(1), end: string.endIndex))
+    
+    let suit: Suit
+    switch suitString {
+        case "D": suit = .Diamonds
+        case "H": suit = .Hearts
+        case "C": suit = .Clubs
+        case "S": suit = .Spades
+        default: suit = .Diamonds
+    }
+    
+    let rank: Rank
+    switch rankString {
+        case "T": rank = .Ten
+        case "J": rank = .Jack
+        case "Q": rank = .Queen
+        case "K": rank = .King
+        case "A": rank = .Ace
+    default:
+        rank = Rank(rawValue: (rankString as NSString).integerValue)!
+    }
+    return PokerCard(rank: rank, suit: suit)
+    
+}
+
+let fileURL = NSBundle.mainBundle().URLForResource("p54", withExtension: "txt")
+let content = try String(contentsOfURL: fileURL!, encoding: NSUTF8StringEncoding)
+let array = content.componentsSeparatedByString("\n")
+var count = 0
+for line in array {
+    let hands = line.componentsSeparatedByString(" ")
+    var h1 = [PokerCard]()
+    var h2 = [PokerCard]()
+    for i in 0..<5 {
+        let c1 = cardFromString(hands[i])
+        let c2 = cardFromString(hands[i+5])
+        h1.append(c1)
+        h2.append(c2)
+    }
+    let g1 = PokerHand(cards: h1)
+    let g2 = PokerHand(cards: h2)
+    if (g1 < g2) == false {
+        count++
+    }
+}
+print(count)
 
 /*
 In the card game poker, a hand consists of five cards and are ranked, from lowest to highest, in the following way:
