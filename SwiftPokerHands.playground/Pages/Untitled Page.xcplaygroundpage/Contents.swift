@@ -135,33 +135,12 @@ func <(x: PokerHand, y: PokerHand) -> Bool {
     } else if x.handRank() != y.handRank() {
         return false
     }
-    
-    let handRank = x.handRank()
-    
-    // handle straights, compare top card
-    if handRank == .StraightFlush || handRank == .Straight {
-        return x.ranks.keys.sort(<).last! < y.ranks.keys.sort(<).last!
-    }
-    
-    // handle flushes
-    // iterate down through a reverse sort of the ranks until you find a higher card or run out
-    if handRank == .RoyalFlush || handRank == .Flush {
-        let reverseXSort = x.ranks.keys.sort(>)
-        let reverseYSort = y.ranks.keys.sort(>)
-        for (x, y) in zip(reverseXSort, reverseYSort) {
-            if x < y { return true }
-            if x > y { return false }
-        }
-    }
-    
-    // For the histogram-based hands, you start at the beginning of the reverse-sorted count list and compare the ranks (two pair is tricky - you must always evaluate the higher of the two pairs for each hand first - the histogram won't help, then the lower pair, then the kicker).
     let xHistogram = x.histogram()
     let yHistogram = y.histogram()
     for (x, y) in zip(xHistogram.1, yHistogram.1) {
         if x < y { return true }
         if x > y { return false }
     }
-    
     return false
 }
 
@@ -236,7 +215,6 @@ func cardFromString(string: String) -> PokerCard {
         rank = Rank(rawValue: (rankString as NSString).integerValue)!
     }
     return PokerCard(rank: rank, suit: suit)
-    
 }
 
 let fileURL = NSBundle.mainBundle().URLForResource("p54", withExtension: "txt")
