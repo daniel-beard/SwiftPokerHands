@@ -1,7 +1,46 @@
 # SwiftPokerHands
 A simple five card poker hand classifier
 
-Example:
+### Examples:
+
+##### Identifying a hand rank
+
+```
+let cards = [
+    PokerCard(rank: .Four, suit: .Hearts),
+    PokerCard(rank: .Five, suit: .Diamonds),
+    PokerCard(rank: .Six, suit: .Clubs),
+    PokerCard(rank: .Seven, suit: .Spades),
+    PokerCard(rank: .Eight, suit: .Hearts),
+]
+let hand = PokerHand(cards: cards)
+print(hand.handRank()) // Straight
+```
+
+##### Comparing two hands
+
+```
+let cards = [
+    PokerCard(rank: .Four, suit: .Hearts),
+    PokerCard(rank: .Four, suit: .Diamonds),
+    PokerCard(rank: .Five, suit: .Hearts),
+    PokerCard(rank: .Five, suit: .Hearts),
+    PokerCard(rank: .Six, suit: .Hearts),
+]
+let cards2 = [
+    PokerCard(rank: .Five, suit: .Hearts),
+    PokerCard(rank: .Five, suit: .Hearts),
+    PokerCard(rank: .Seven, suit: .Hearts),
+    PokerCard(rank: .Six, suit: .Hearts),
+    PokerCard(rank: .Six, suit: .Clubs),
+]
+let hand = PokerHand(cards: cards)
+let hand2 = PokerHand(cards: cards2)
+
+print(hand < hand2) // true
+```
+
+##### Other Examples
 
 ```
 let cards = [
@@ -36,3 +75,6 @@ print(hand.suits) // [Suit.Diamonds: 1, Suit.Hearts: 4]
 print(hand.handRank()) // TwoPair
 print(hand3.handRank()) // Straight
 ```
+
+### License 
+MIT
