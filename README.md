@@ -1,6 +1,4 @@
-# SwiftPokerHands
-![](https://img.shields.io/badge/swift-3.0-orange.svg)
-
+# SwiftPokerHands ![](https://img.shields.io/badge/swift-3-brightgreen.svg)
 
 A simple five card poker hand classifier
 
@@ -8,7 +6,7 @@ A simple five card poker hand classifier
 
 ##### Identifying a hand rank
 
-```
+```swift
 let cards = [
     Card(rank: .four,  suit: .hearts),
     Card(rank: .five,  suit: .diamonds),
@@ -22,7 +20,7 @@ print(hand.handRank()) // straight
 
 ##### Comparing two hands
 
-```
+```swift
 let cards = [
     Card(rank: .four,  suit: .hearts),
     Card(rank: .four,  suit: .diamonds),
@@ -45,7 +43,7 @@ print(hand < hand2) // true
 
 ##### Other Examples
 
-```
+```swift
 let cards = [
     Card(rank: .four,   suit: .hearts),
     Card(rank: .four,   suit: .diamonds),
