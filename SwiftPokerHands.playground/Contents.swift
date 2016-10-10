@@ -89,7 +89,7 @@ struct PokerHand {
         guard ranks.keys.count == 5 else {
             return false
         }
-        let sortedRanks = ranks.keys.map({$0.rawValue}).sorted(isOrderedBefore: >)
+        let sortedRanks = ranks.keys.map({$0.rawValue}).sorted(by: >)
         return sortedRanks[0] - sortedRanks[4] == 4
     }
 
@@ -115,8 +115,8 @@ struct PokerHand {
         // Generate final sorted array
         var result = [Rank]()
         var histogram = [Int]()
-        for key in sortedWithinRanks.keys.sorted(isOrderedBefore: >) {
-            for rank in sortedWithinRanks[key]!.sorted(isOrderedBefore: >) {
+        for key in sortedWithinRanks.keys.sorted(by: >) {
+            for rank in sortedWithinRanks[key]!.sorted(by: >) {
                 histogram.append(key)
                 let currentRanks = [Rank](repeating: rank, count: key)
                 result += currentRanks
@@ -217,7 +217,7 @@ func cardFromString(_ string: String) -> Card {
     return Card(rank: rank, suit: suit)
 }
 
-let fileURL = Bundle.main().urlForResource("p54", withExtension: "txt")
+let fileURL = Bundle.main.url(forResource: "p54", withExtension: "txt")
 let content = try String(contentsOf: fileURL!, encoding: String.Encoding.utf8)
 let array = content.components(separatedBy: "\n")
 var count = 0
