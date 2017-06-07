@@ -1,4 +1,10 @@
-//: Playground - noun: a place where people can play
+//
+//  SwiftPokerHands.swift
+//  SwiftPokerHands
+//
+//  Created by Daniel Beard on 6/7/17.
+//  Copyright © 2017 dbeard. All rights reserved.
+//
 
 import Foundation
 
@@ -7,7 +13,7 @@ enum Suit: Int {
 }
 
 enum Rank: Int {
-    case two = 2, three, four, five, six, seven, eight, nine, ten
+    case two = 2, three=3, four=4, five=5, six, seven, eight, nine, ten
     case jack, queen, king, ace
 }
 
@@ -48,8 +54,8 @@ struct PokerHand {
     }
 
     func handRank() -> PokerHandRank {
-        let tripleRanks = ranks.values.lazy.filter { $0 == 3 }
-        let doubleRanks = ranks.values.lazy.filter { $0 == 2 }
+        let tripleRanks = ranks.values.filter { $0 == 3 }
+        let doubleRanks = ranks.values.filter { $0 == 2 }
 
         if suits.keys.count == 1 && ranks.keys.lazy.filter({[.ten,.jack,.queen,.king,.ace].contains($0)}).count == 5 {
             return .royalFlush
@@ -158,87 +164,90 @@ func >(x: Rank, y: Rank) -> Bool {
 
 
 //===============================================
+func runHandClassifier() {
 
-let cards = [
-    Card(rank: .four, suit: .hearts),
-    Card(rank: .four, suit: .diamonds),
-    Card(rank: .five, suit: .hearts),
-    Card(rank: .five, suit: .hearts),
-    Card(rank: .six, suit: .hearts),
-]
-let cards2 = [
-    Card(rank: .five, suit: .hearts),
-    Card(rank: .five, suit: .hearts),
-    Card(rank: .seven, suit: .hearts),
-    Card(rank: .six, suit: .hearts),
-    Card(rank: .six, suit: .clubs),
-]
-let cards3 = [
-    Card(rank: .four, suit: .hearts),
-    Card(rank: .five, suit: .diamonds),
-    Card(rank: .six, suit: .clubs),
-    Card(rank: .seven, suit: .spades),
-    Card(rank: .eight, suit: .hearts),
-]
-let hand = PokerHand(cards: cards)
-let hand2 = PokerHand(cards: cards2)
-let hand3 = PokerHand(cards: cards3)
+    let cards = [
+        Card(rank: .four, suit: .hearts),
+        Card(rank: .four, suit: .diamonds),
+        Card(rank: .five, suit: .hearts),
+        Card(rank: .five, suit: .hearts),
+        Card(rank: .six, suit: .hearts),
+        ]
+    let cards2 = [
+        Card(rank: .five, suit: .hearts),
+        Card(rank: .five, suit: .hearts),
+        Card(rank: .seven, suit: .hearts),
+        Card(rank: .six, suit: .hearts),
+        Card(rank: .six, suit: .clubs),
+        ]
+    let cards3 = [
+        Card(rank: .four, suit: .hearts),
+        Card(rank: .five, suit: .diamonds),
+        Card(rank: .six, suit: .clubs),
+        Card(rank: .seven, suit: .spades),
+        Card(rank: .eight, suit: .hearts),
+        ]
+    let hand = PokerHand(cards: cards)
+    let hand2 = PokerHand(cards: cards2)
+    let hand3 = PokerHand(cards: cards3)
 
-print(hand < hand2)
-print(hand2.handRank())
+    print(hand.handRank())
+    print(hand2.handRank())
+    print(hand < hand2)
+    print(hand2.handRank())
 
-print(hand.suits)
-print(hand.handRank())
-print(hand3.handRank())
+    print(hand.suits)
+    print(hand.handRank())
+    print(hand3.handRank())
 
-func cardFromString(_ string: String) -> Card {
-    let rankString = string.substring(with: (string.startIndex ..< string.characters.index(string.startIndex, offsetBy: 1)))
-    let suitString = string.substring(with: (string.characters.index(string.startIndex, offsetBy: 1) ..< string.endIndex))
+    func cardFromString(_ string: String) -> Card {
+        let rankString = string.substring(with: (string.startIndex ..< string.characters.index(string.startIndex, offsetBy: 1)))
+        let suitString = string.substring(with: (string.characters.index(string.startIndex, offsetBy: 1) ..< string.endIndex))
 
-    let suit: Suit
-    switch suitString {
-    case "D": suit = .diamonds
-    case "H": suit = .hearts
-    case "C": suit = .clubs
-    case "S": suit = .spades
-    default: suit = .diamonds
+        let suit: Suit
+        switch suitString {
+        case "D": suit = .diamonds
+        case "H": suit = .hearts
+        case "C": suit = .clubs
+        case "S": suit = .spades
+        default: suit = .diamonds
+        }
+
+        let rank: Rank
+        switch rankString {
+        case "T": rank = .ten
+        case "J": rank = .jack
+        case "Q": rank = .queen
+        case "K": rank = .king
+        case "A": rank = .ace
+        default:
+            rank = Rank(rawValue: (rankString as NSString).integerValue)!
+        }
+        return Card(rank: rank, suit: suit)
     }
 
-    let rank: Rank
-    switch rankString {
-    case "T": rank = .ten
-    case "J": rank = .jack
-    case "Q": rank = .queen
-    case "K": rank = .king
-    case "A": rank = .ace
-    default:
-        rank = Rank(rawValue: (rankString as NSString).integerValue)!
+    let fileURL = Bundle.main.url(forResource: "p54", withExtension: "txt")
+    let content = try! String(contentsOf: fileURL!, encoding: String.Encoding.utf8)
+    let array = content.components(separatedBy: "\n")
+    var count = 0
+    for line in array {
+        let hands = line.components(separatedBy: " ")
+        var h1 = [Card]()
+        var h2 = [Card]()
+        for i in 0..<5 {
+            let c1 = cardFromString(hands[i])
+            let c2 = cardFromString(hands[i+5])
+            h1.append(c1)
+            h2.append(c2)
+        }
+        let g1 = PokerHand(cards: h1)
+        let g2 = PokerHand(cards: h2)
+        if (g1 < g2) == false {
+            count += 1
+        }
     }
-    return Card(rank: rank, suit: suit)
+    print(count)
 }
-
-let fileURL = Bundle.main.url(forResource: "p54", withExtension: "txt")
-let content = try String(contentsOf: fileURL!, encoding: String.Encoding.utf8)
-let array = content.components(separatedBy: "\n")
-var count = 0
-for line in array {
-    let hands = line.components(separatedBy: " ")
-    var h1 = [Card]()
-    var h2 = [Card]()
-    for i in 0..<5 {
-        let c1 = cardFromString(hands[i])
-        let c2 = cardFromString(hands[i+5])
-        h1.append(c1)
-        h2.append(c2)
-    }
-    let g1 = PokerHand(cards: h1)
-    let g2 = PokerHand(cards: h2)
-    if (g1 < g2) == false {
-        count += 1
-    }
-}
-print(count)
-
 /*
  In the card game poker, a hand consists of five cards and are ranked, from lowest to highest, in the following way:
 
