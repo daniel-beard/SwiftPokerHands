@@ -13,7 +13,7 @@ enum Suit: Int {
 }
 
 enum Rank: Int {
-    case two = 2, three=3, four=4, five=5, six, seven, eight, nine, ten
+    case two = 2, three, four, five, six, seven, eight, nine, ten
     case jack, queen, king, ace
 }
 
@@ -40,14 +40,12 @@ struct PokerHand {
     let suits: [Suit: Int]
 
     init(cards: [Card]) {
-        if cards.count != 5 {
-            fatalError("Wrong number of cards!")
-        }
+        guard cards.count == 5 else { fatalError("Wrong number of cards!") }
         var ranks = [Rank: Int]()
         var suits = [Suit: Int]()
         for card in cards {
-            ranks[card.rank] = ranks[card.rank] != nil ? ranks[card.rank]! + 1 : 1
-            suits[card.suit] = suits[card.suit] != nil ? suits[card.suit]! + 1 : 1
+            ranks[card.rank, default: 0] += 1
+            suits[card.suit, default: 0] += 1
         }
         self.ranks = ranks
         self.suits = suits
@@ -92,9 +90,7 @@ struct PokerHand {
     }
 
     func isStraight() -> Bool {
-        guard ranks.keys.count == 5 else {
-            return false
-        }
+        guard ranks.keys.count == 5 else { return false }
         let sortedRanks = ranks.keys.map({$0.rawValue}).sorted(by: >)
         return sortedRanks[0] - sortedRanks[4] == 4
     }
@@ -201,8 +197,8 @@ func runHandClassifier() {
     print(hand3.handRank())
 
     func cardFromString(_ string: String) -> Card {
-        let rankString = string.substring(with: (string.startIndex ..< string.characters.index(string.startIndex, offsetBy: 1)))
-        let suitString = string.substring(with: (string.characters.index(string.startIndex, offsetBy: 1) ..< string.endIndex))
+        let rankString = String(string.prefix(1))
+        let suitString = String(string.suffix(1))
 
         let suit: Suit
         switch suitString {
