@@ -1,4 +1,4 @@
-# SwiftPokerHands ![](https://img.shields.io/badge/swift-4-brightgreen.svg)
+# SwiftPokerHands ![](https://img.shields.io/badge/swift-5-brightgreen.svg)
 
 A simple five card poker hand classifier
 
